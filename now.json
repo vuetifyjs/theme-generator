@@ -1,0 +1,17 @@
+{
+  "name": "vuetify-theme-generator",
+  "type": "static",
+  "static": {
+    "public": "dist",
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "alias": "theme-generator.vuetifyjs.com",
+  "files": [
+    "dist"
+  ]
+}
