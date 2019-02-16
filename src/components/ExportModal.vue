@@ -5,13 +5,13 @@
         {{ useNames ? "import colors from 'vuetify/es5/util/colors'" : null }}
 
         {
-        primary: {{ useNames ? 'colors.' + palettes[selections[0]] + '.base': getHexValue(0) }},
-        secondary: {{ useNames ? 'colors.' + palettes[selections[1]] + '.base': getHexValue(1) }},
-        accent: {{ useNames ? 'colors.' + palettes[selections[2]] + '.base': getHexValue(2) }},
-        error: {{ useNames ? 'colors.' + palettes[selections[3]] + '.base': getHexValue(3) }},
-        warning: {{ useNames ? 'colors.' + palettes[selections[4]] + '.base': getHexValue(4) }},
-        info: {{ useNames ? 'colors.' + palettes[selections[5]] + '.base': getHexValue(5) }},
-        success: {{ useNames ? 'colors.' + palettes[selections[6]] + '.base': getHexValue(6) }}
+        primary: {{ useNames ? 'colors.' + getPaletteName(0) + '.base': getHexValue(0) }},
+        secondary: {{ useNames ? 'colors.' + getPaletteName(1) + '.base': getHexValue(1) }},
+        accent: {{ useNames ? 'colors.' + getPaletteName(2) + '.base': getHexValue(2) }},
+        error: {{ useNames ? 'colors.' + getPaletteName(3) + '.base': getHexValue(3) }},
+        warning: {{ useNames ? 'colors.' + getPaletteName(4) + '.base': getHexValue(4) }},
+        info: {{ useNames ? 'colors.' + getPaletteName(5) + '.base': getHexValue(5) }},
+        success: {{ useNames ? 'colors.' + getPaletteName(6) + '.base': getHexValue(6) }}
         }
       </code>
     </v-card-text>
@@ -75,8 +75,11 @@
     }),
 
     methods: {
+      getPaletteName (index) {
+        return camelCase(this.palettes[this.selections[index]])
+      },
       getHexValue (index) {
-        return this.colors[camelCase(this.palettes[this.selections[index]])].base
+        return `"${this.colors[this.getPaletteName(index)].base}"`
       },
       close () {
         this.$emit('close')
