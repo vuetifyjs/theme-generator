@@ -157,7 +157,6 @@
     },
     data: () => ({
       colors,
-      selections: [],
       exportModal: false,
       currentOption: 0,
       options: [
