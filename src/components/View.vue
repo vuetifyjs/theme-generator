@@ -5,36 +5,31 @@
       pa-0
     >
       <v-layout>
-        <v-item-group
-          v-model="selections"
-          class="xs12 sm10 md8 lg6 layout wrap flex"
-          multiple
-        >
-          <v-item
-            v-for="palette in palettes"
-            :key="palette"
-          >
-            <v-hover slot-scope="{ active, toggle }">
+        <v-flex class="xs12 sm10 md8 lg6 layout wrap flex">
+          <template v-for="palette in palettes">
+            <v-hover
+              :key="palette"
+              :class="$style.pointer"
+            >
               <v-card
                 slot-scope="{ hover }"
                 :color="palette"
-                :style="getStyle(active, hover)"
-                :value="palette"
-                :class="`elevation-${active || hover ? '12' : '0'}`"
+                :style="getStyle(hover, palette)"
+                :class="`elevation-${isActive(palette) || hover ? '12' : '0'}`"
                 class="pa-2 d-flex"
                 tile
-                height="400"
+                height="300"
                 max-width="125"
                 width="125"
-                @click.native="toggle"
+                @click.native="selectColor(palette)"
               >
                 <v-layout
                   column
                   justify-space-between
                   align-space-between
                 >
-                  <v-subtitle-2
-                    tag="strong"
+                  <span
+                    class="subheading"
                     v-text="palette.toUpperCase()"
                   />
                   <v-slide-x-transition
@@ -43,19 +38,15 @@
                     group
                   >
                     <v-icon key="icon">mdi-check</v-icon>
-                    <v-subtitle-1 v-if="primary === palette" key="primary">Primary</v-subtitle-1>
-                    <v-subtitle-1 v-if="secondary === palette" key="secondary">Secondary</v-subtitle-1>
-                    <v-subtitle-1 v-if="accent === palette" key="accent">Accent</v-subtitle-1>
-                    <v-subtitle-1 v-if="error === palette" key="error">Error</v-subtitle-1>
-                    <v-subtitle-1 v-if="warning === palette" key="warning">Warning</v-subtitle-1>
-                    <v-subtitle-1 v-if="info === palette" key="info">Info</v-subtitle-1>
-                    <v-subtitle-1 v-if="success === palette" key="success">Success </v-subtitle-1>
+                    <template v-for="option in options">
+                      <span v-if="option.color === palette" :key="option.id" v-text="option.id" />
+                    </template>
                   </v-slide-x-transition>
                 </v-layout>
               </v-card>
             </v-hover>
-          </v-item>
-        </v-item-group>
+          </template>
+        </v-flex>
         <v-flex
           xs12
           sm10
@@ -97,8 +88,8 @@
               <div
                 class="pl-5 py-4"
               >
-                <v-display-1 class="pl-5 font-weight-light">Theme Preview</v-display-1>
-                <v-subtitle-1 class="pl-5 font-weight-light">Export your theme below</v-subtitle-1>
+                <span class="pl-5 font-weight-light">Theme Preview</span>
+                <span class="pl-5 font-weight-light">Export your theme below</span>
               </div>
               <v-btn
                 :color="secondary"
@@ -117,67 +108,13 @@
 
     <theme-bottom-sheet>
       <v-btn
-        :key="`primary-${primary}`"
-        :color="primary"
+        v-for="(option, index) in options"
+        :key="option.id"
+        :color="currentOption !== index ? (option.color || 'grey darken-1') : 'grey darken-4'"
         depressed
-      >
-        Primary
-        {{ colors[primary] ? colors[primary].base : '' }}
-      </v-btn>
-
-      <v-btn
-        :key="`secondary-${secondary}`"
-        :color="secondary"
-        depressed
-      >
-        Secondary
-        {{ colors[secondary] ? colors[secondary].base : '' }}
-      </v-btn>
-
-      <v-btn
-        :key="`accent-${accent}`"
-        :color="accent"
-        depressed
-      >
-        Accent
-        {{ colors[accent] ? colors[accent].base : '' }}
-      </v-btn>
-
-      <v-btn
-        :key="`error-${error}`"
-        :color="error"
-        depressed
-      >
-        Error
-        {{ colors[error] ? colors[error].base : '' }}
-      </v-btn>
-
-      <v-btn
-        :key="`warning-${warning}`"
-        :color="warning"
-        depressed
-      >
-        Warning
-        {{ colors[warning] ? colors[warning].base : '' }}
-      </v-btn>
-
-      <v-btn
-        :key="`info-${info}`"
-        :color="info"
-        depressed
-      >
-        Info
-        {{ colors[info] ? colors[info].base : '' }}
-      </v-btn>
-
-      <v-btn
-        :key="`success-${success}`"
-        :color="success"
-        depressed
-      >
-        Success
-        {{ colors[success] ? colors[success].base : '' }}
-      </v-btn>
+        @click="currentOption = index"
+        v-text="option.id"
+      />
 
       <v-flex xs12>
         <v-divider />
@@ -186,7 +123,7 @@
       <v-flex xs12 class="text-xs-right">
         <v-dialog
           v-model="exportModal"
-          max-width="360"
+          max-width="370"
           lazy
         >
           <v-btn
@@ -199,8 +136,7 @@
 
           <export-modal
             :colors="colors"
-            :selections="selections"
-            :palettes="palettes"
+            :options="options"
             @close="exportModal = false"
           />
         </v-dialog>
@@ -219,72 +155,61 @@
       ThemeBottomSheet: () => import('./BottomSheet'),
       ExportModal: () => import('./ExportModal')
     },
-
     data: () => ({
       colors,
       selections: [],
-      exportModal: false
+      exportModal: false,
+      currentOption: 0,
+      options: [
+        { id: 'primary', color: '' },
+        { id: 'secondary', color: '' },
+        { id: 'accent', color: '' },
+        { id: 'error', color: '' },
+        { id: 'warning', color: '' },
+        { id: 'info', color: '' },
+        { id: 'success', color: '' }
+      ]
     }),
-
     computed: {
       palettes () {
         const keys = Object.keys(this.colors)
-
         return keys.map(kebabCase).slice(0, keys.length - 2)
       },
+      nextOption () {
+        return this.options.findIndex(option => !option.color)
+      },
       primary () {
-        if (!this.selections.length) return 'grey'
-
-        return this.palettes[this.selections[0]]
+        return this.options[0].color
       },
       secondary () {
-        if (this.selections.length < 1) return 'grey'
-
-        return this.palettes[this.selections[1]]
-      },
-      accent () {
-        if (this.selections.length < 2) return 'grey'
-
-        return this.palettes[this.selections[2]]
-      },
-      error () {
-        if (this.selections.length < 3) return 'grey'
-
-        return this.palettes[this.selections[3]]
-      },
-      warning () {
-        if (this.selections.length < 4) return 'grey'
-
-        return this.palettes[this.selections[4]]
-      },
-      info () {
-        if (this.selections.length < 5) return 'grey'
-
-        return this.palettes[this.selections[5]]
-      },
-      success () {
-        if (this.selections.length < 6) return 'grey'
-
-        return this.palettes[this.selections[6]]
+        return this.options[1].color
       }
     },
-
-    watch: {
-      selections (val) {
-        if (val.length > 8) {
-          this.$nextTick(() => {
-            this.selections.shift()
-          })
-        }
-      }
-    },
-
     methods: {
-      getStyle (active, hover) {
+      isActive (color) {
+        return this.options.findIndex(option => option.color === color) > -1
+      },
+      getStyle (hover, palette) {
         return {
-          transform: active || hover ? 'scale(.9, .85)' : 'none'
+          transform: this.isActive(palette) || hover ? 'scale(.9, .85)' : 'none'
+        }
+      },
+      selectColor (color) {
+        // check if color is already selected, else set color and change currentOption
+        const index = this.options.findIndex(option => option.color === color)
+        if (index > -1) {
+          this.options[index].color = ''
+          this.currentOption = index
+        } else if (this.currentOption >= 0 && this.currentOption < 7) {
+          this.options[this.currentOption].color = color
+          this.currentOption = this.nextOption
         }
       }
     }
   }
 </script>
+
+<style lang="stylus" module>
+.pointer
+  cursor: pointer
+</style>
